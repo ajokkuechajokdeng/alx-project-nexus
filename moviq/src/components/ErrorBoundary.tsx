@@ -63,7 +63,7 @@ const DefaultErrorFallback = ({ error }: { error: Error | null }) => (
   <ErrorContainer role="alert" aria-live="assertive">
     <ErrorTitle>Something went wrong</ErrorTitle>
     <ErrorMessage>
-      We're sorry, but an unexpected error occurred. Our team has been notified.
+      We&apos;re sorry, but an unexpected error occurred. Our team has been notified.
     </ErrorMessage>
     {error && process.env.NODE_ENV === 'development' && (
       <>
@@ -90,7 +90,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
-    
+
     // Here you could send the error to an error reporting service
     // like Sentry, LogRocket, etc.
   }
@@ -100,7 +100,7 @@ class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) {
         return this.props.fallback;
       }
-      
+
       return <DefaultErrorFallback error={this.state.error} />;
     }
 

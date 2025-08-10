@@ -8,7 +8,7 @@ interface CacheItem<T> {
 }
 
 class ApiCache {
-  private cache: Record<string, CacheItem<any>> = {};
+  private cache: Record<string, CacheItem<unknown>> = {};
   private readonly maxAge: number; // Cache expiration in milliseconds
 
   constructor(maxAgeInMinutes = 5) {

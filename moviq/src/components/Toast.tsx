@@ -1,5 +1,5 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
-import styled, { keyframes, css } from 'styled-components';
+import styled, { keyframes, css, DefaultTheme } from 'styled-components';
 
 // Toast types
 export type ToastType = 'success' | 'error' | 'info' | 'warning';
@@ -61,7 +61,7 @@ interface ToastItemProps {
   exiting: boolean;
 }
 
-const getToastColor = (type: ToastType, theme: any) => {
+const getToastColor = (type: ToastType, theme: DefaultTheme) => {
   switch (type) {
     case 'success':
       return theme.colors.success;
@@ -92,7 +92,7 @@ const ToastItem = styled.div<ToastItemProps>`
       : css`
           ${slideIn} 0.3s ease-out
         `};
-  
+
   &:hover {
     box-shadow: ${({ theme }) => theme.shadows.lg};
   }
@@ -117,11 +117,11 @@ const CloseButton = styled.button`
   padding: 0;
   margin-left: ${({ theme }) => theme.space.sm};
   transition: ${({ theme }) => theme.transitions.default};
-  
+
   &:hover {
     color: ${({ theme }) => theme.colors.text};
   }
-  
+
   &:focus {
     outline: none;
     color: ${({ theme }) => theme.colors.text};
@@ -160,7 +160,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         toast.id === id ? { ...toast, exiting: true } : toast
       )
     );
-    
+
     // Remove toast after animation completes
     setTimeout(() => {
       setToasts((prevToasts) => prevToasts.filter((toast) => toast.id !== id));
@@ -178,7 +178,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     const timers = toasts.map((toast) => {
       if (toast.exiting) return undefined;
-      
+
       return setTimeout(() => {
         startExitAnimation(toast.id);
       }, toast.duration);
