@@ -99,9 +99,14 @@ const NavItem = styled.div`
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     width: 100%;
     transform: none;
+    margin-bottom: ${({ theme }) => theme.space.xs};
 
     &:hover {
       transform: none;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
     }
   }
 `;
@@ -220,6 +225,7 @@ const NavLink = styled.a<{ active?: boolean; hasFilters?: boolean; onClick?: () 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     width: 100%;
     padding: ${({ theme }) => `${theme.space.md} ${theme.space.md}`};
+    justify-content: space-between;
   }
 `;
 
@@ -263,12 +269,14 @@ const DropdownMenu = styled.div<{ isOpen: boolean; isWide?: boolean }>`
     margin-left: ${({ theme }) => theme.space.md};
     margin-top: ${({ theme }) => theme.space.xs};
     padding-left: ${({ theme }) => theme.space.md};
-    background-color: transparent;
+    background-color: ${({ theme }) => `${theme.colors.surfaceLight}20`};
     transform: none;
-    max-height: ${({ isOpen }) => (isOpen ? '500px' : '0')};
-    opacity: 1;
+    max-height: ${({ isOpen }) => (isOpen ? '2000px' : '0')};
+    opacity: ${({ isOpen }) => (isOpen ? 1 : 0)};
     visibility: visible;
-    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    transition: max-height 0.5s ease-in-out, opacity 0.3s ease-in-out;
+    overflow: hidden;
+    will-change: max-height, opacity;
 
     &:before {
       display: none;
@@ -299,10 +307,18 @@ const DropdownItem = styled.a<{ active?: boolean }>`
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
-    padding: ${({ theme }) => `${theme.space.xs} ${theme.space.md}`};
+    padding: ${({ theme }) => `${theme.space.md} ${theme.space.md}`};
+    min-height: 44px; /* Ensure minimum touch target size on mobile */
+    display: flex;
+    align-items: center;
 
     &:hover {
       transform: translateX(0);
+    }
+
+    &:active {
+      background-color: ${({ theme }) => `${theme.colors.surfaceLight}80`};
+      color: ${({ theme }) => theme.colors.primary};
     }
   }
 `;
@@ -314,6 +330,14 @@ const DropdownSection = styled.div`
     border-bottom: 1px solid ${({ theme }) => theme.colors.border};
     padding-bottom: ${({ theme }) => theme.space.sm};
   }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    margin-bottom: ${({ theme }) => theme.space.lg};
+
+    &:not(:last-child) {
+      padding-bottom: ${({ theme }) => theme.space.md};
+    }
+  }
 `;
 
 const DropdownSectionTitle = styled.div`
@@ -324,6 +348,11 @@ const DropdownSectionTitle = styled.div`
   margin-bottom: ${({ theme }) => theme.space.xs};
   padding: ${({ theme }) => `${theme.space.xs} ${theme.space.md}`};
   letter-spacing: 0.05em;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding: ${({ theme }) => `${theme.space.md} ${theme.space.md} ${theme.space.xs}`};
+    font-size: ${({ theme }) => theme.fontSizes.sm};
+  }
 `;
 
 const SortOption = styled.label<{ active?: boolean }>`
@@ -346,6 +375,38 @@ const SortOption = styled.label<{ active?: boolean }>`
   input {
     margin-right: ${({ theme }) => theme.space.sm};
     accent-color: ${({ theme }) => theme.colors.primary};
+    min-width: 18px;
+    min-height: 18px;
+    cursor: pointer;
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding: ${({ theme }) => `${theme.space.md} ${theme.space.md}`};
+    min-height: 44px; /* Ensure minimum touch target size on mobile */
+
+    &:active {
+      background-color: ${({ theme }) => `${theme.colors.surfaceLight}80`};
+    }
+
+    input {
+      min-width: 24px;
+      min-height: 24px;
+      position: relative;
+
+      &:checked {
+        box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}40;
+      }
+
+      &:after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        z-index: 1;
+      }
+    }
   }
 `;
 
@@ -369,6 +430,38 @@ const FilterOption = styled.label<{ active?: boolean }>`
   input {
     margin-right: ${({ theme }) => theme.space.sm};
     accent-color: ${({ theme }) => theme.colors.primary};
+    min-width: 18px;
+    min-height: 18px;
+    cursor: pointer;
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    padding: ${({ theme }) => `${theme.space.md} ${theme.space.md}`};
+    min-height: 44px; /* Ensure minimum touch target size on mobile */
+
+    &:active {
+      background-color: ${({ theme }) => `${theme.colors.surfaceLight}80`};
+    }
+
+    input {
+      min-width: 24px;
+      min-height: 24px;
+      position: relative;
+
+      &:checked {
+        box-shadow: 0 0 0 2px ${({ theme }) => theme.colors.primary}40;
+      }
+
+      &:after {
+        content: '';
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        z-index: 1;
+      }
+    }
   }
 `;
 
@@ -376,8 +469,16 @@ const ChevronIcon = styled.span<{ isOpen: boolean }>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
   transform: ${({ isOpen }) => (isOpen ? 'rotate(180deg)' : 'rotate(0)')};
+  margin-left: auto;
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
 `;
 
 const HamburgerIconContainer = styled.div<{ isOpen: boolean }>`
@@ -598,26 +699,36 @@ const Header: React.FC = () => {
       // Check if the click was on a link or button inside the mobile menu
       const isClickOnNavLink = (event.target as Element)?.closest('a, button') !== null;
 
+      // Check if click was on a dropdown toggle button
+      const isClickOnDropdownToggle = 
+        (event.target as Element)?.closest('[aria-label="Toggle genres dropdown"]') !== null ||
+        (event.target as Element)?.closest('[aria-label="Toggle discover dropdown"]') !== null;
+
       // Only close the mobile menu if the click was not on the menu button or the menu itself
+      // and not on a dropdown toggle
       if (mobileMenuRef.current && 
           !mobileMenuRef.current.contains(event.target as Node) && 
           !isClickOnMenuButton) {
         setMobileMenuOpen(false);
       }
 
-      // If the click was on a nav link, close the mobile menu
-      if (isClickOnNavLink && mobileMenuOpen) {
+      // If the click was on a nav link (but not a dropdown toggle), close the mobile menu
+      if (isClickOnNavLink && !isClickOnDropdownToggle && mobileMenuOpen) {
         // Use setTimeout to ensure the navigation happens before closing the menu
         setTimeout(() => setMobileMenuOpen(false), 100);
       }
 
-      // Handle genre dropdown
-      if (genresRef.current && !genresRef.current.contains(event.target as Node)) {
+      // Handle genre dropdown - only close if click is outside both the dropdown and its toggle
+      if (genresRef.current && 
+          !genresRef.current.contains(event.target as Node) && 
+          !(event.target as Element)?.closest('[aria-label="Toggle genres dropdown"]')) {
         setGenresOpen(false);
       }
 
-      // Handle discover dropdown
-      if (discoverRef.current && !discoverRef.current.contains(event.target as Node)) {
+      // Handle discover dropdown - only close if click is outside both the dropdown and its toggle
+      if (discoverRef.current && 
+          !discoverRef.current.contains(event.target as Node) && 
+          !(event.target as Element)?.closest('[aria-label="Toggle discover dropdown"]')) {
         setDiscoverOpen(false);
       }
     };
@@ -668,9 +779,15 @@ const Header: React.FC = () => {
             <NavItem ref={genresRef}>
               <NavLink 
                 as="button" 
-                onClick={() => setGenresOpen(!genresOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setGenresOpen(!genresOpen);
+                  if (discoverOpen) setDiscoverOpen(false);
+                }}
                 active={pathname.startsWith('/genre') || !!genre}
                 hasFilters={!!genre || !!sort}
+                aria-label="Toggle genres dropdown"
+                aria-expanded={genresOpen}
               >
                 Genres
                 {(!!genre || !!sort) && <FilterBadge>{genre && sort ? '2' : '1'}</FilterBadge>}
@@ -689,6 +806,7 @@ const Header: React.FC = () => {
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         handleGenreSelect(slug);
                       }}
                       active={genre === slug}
@@ -700,6 +818,7 @@ const Header: React.FC = () => {
                     href="#"
                     onClick={(e) => {
                       e.preventDefault();
+                      e.stopPropagation();
                       handleGenreSelect(null);
                     }}
                     active={!genre}
@@ -735,9 +854,15 @@ const Header: React.FC = () => {
             <NavItem ref={discoverRef}>
               <NavLink 
                 as="button" 
-                onClick={() => setDiscoverOpen(!discoverOpen)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDiscoverOpen(!discoverOpen);
+                  if (genresOpen) setGenresOpen(false);
+                }}
                 active={pathname.startsWith('/discover') || !!discover}
                 hasFilters={!!discover || !!query.time_period}
+                aria-label="Toggle discover dropdown"
+                aria-expanded={discoverOpen}
               >
                 Discover
                 {(!!discover || !!query.time_period) && (
@@ -760,6 +885,7 @@ const Header: React.FC = () => {
                       href="#"
                       onClick={(e) => {
                         e.preventDefault();
+                        e.stopPropagation();
                         handleDiscoverSelect(slug);
                       }}
                       active={discover === slug}
