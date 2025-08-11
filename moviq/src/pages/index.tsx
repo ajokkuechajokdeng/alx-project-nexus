@@ -5,10 +5,11 @@ import MovieCard from "@/components/MovieCard";
 import { MovieCardSkeleton } from "@/components/SkeletonLoader";
 import PageTransition from "@/components/PageTransition";
 import SEO from "@/components/SEO";
-import { Movie } from "@/types/movie";
+import { Movie, MoviesResponse } from "@/types/movie";
 import { getRecommendedMovies } from "@/utils/api";
 import { useFavorites } from "@/hooks/useFavorites";
 import { GENRE_MAPPINGS, GENRE_NAMES, DISCOVERY_TYPES, SORT_OPTIONS } from "@/constants/genres";
+import Pagination from "@/components/Pagination";
 
 const PageTitle = styled.h1`
   font-size: ${({ theme }) => theme.fontSizes["4xl"]};
@@ -48,12 +49,14 @@ const ErrorMessage = styled.div`
 
 export default function Home() {
   const router = useRouter();
-  const { genre, discover, sort, time_period } = router.query;
+  const { genre, discover, sort, time_period, page } = router.query;
 
   const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
   // Generate page title based on active filters
@@ -101,6 +104,18 @@ export default function Home() {
     return title;
   };
 
+  // Initialize currentPage from URL query parameter
+  useEffect(() => {
+    if (page) {
+      const pageNum = parseInt(page as string, 10);
+      if (!isNaN(pageNum) && pageNum > 0) {
+        setCurrentPage(pageNum);
+      }
+    } else {
+      setCurrentPage(1);
+    }
+  }, [page]);
+
   // Fetch movies based on discover type, sort, and time period
   useEffect(() => {
     const fetchMovies = async () => {
@@ -112,6 +127,7 @@ export default function Home() {
         let apiUrl = '';
         const sortParam = sort ? `&sort_by=${sort}` : '';
         let timeWindow = '';
+        const pageParam = `&page=${currentPage}`;
 
         // Set time window based on time_period
         if (time_period === 'today') {
@@ -124,20 +140,23 @@ export default function Home() {
 
         // Determine which API endpoint to use based on discover type
         if (discover === "top-rated") {
-          apiUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1${sortParam}`;
+          apiUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US${pageParam}${sortParam}`;
         } else if (discover === "upcoming") {
-          apiUrl = `https://api.themoviedb.org/3/movie/upcoming?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1${sortParam}`;
+          apiUrl = `https://api.themoviedb.org/3/movie/upcoming?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US${pageParam}${sortParam}`;
         } else if (discover === "now-playing") {
-          apiUrl = `https://api.themoviedb.org/3/movie/now_playing?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1${sortParam}`;
+          apiUrl = `https://api.themoviedb.org/3/movie/now_playing?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US${pageParam}${sortParam}`;
         } else {
           // Default to trending
-          apiUrl = `https://api.themoviedb.org/3/trending/movie/${timeWindow}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1`;
+          apiUrl = `https://api.themoviedb.org/3/trending/movie/${timeWindow}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US${pageParam}`;
         }
 
         // Fetch movies
         const res = await fetch(apiUrl);
-        const data = await res.json();
+        const data = await res.json() as MoviesResponse;
         let movies = data.results || [];
+
+        // Update total pages
+        setTotalPages(data.total_pages || 1);
 
         // Apply sorting if not already sorted by API
         if (sort && !apiUrl.includes('sort_by')) {
@@ -201,7 +220,17 @@ export default function Home() {
     };
 
     fetchMovies();
-  }, [genre, discover, sort, time_period]);
+  }, [genre, discover, sort, time_period, currentPage]);
+
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    // Update URL with new page parameter
+    const newQuery = { ...router.query, page: page.toString() };
+    router.push({
+      pathname: '/',
+      query: newQuery
+    }, undefined, { shallow: true });
+  };
 
   const handleFavoriteToggle = (movie: Movie) => {
     if (isFavorite(movie.id)) {
@@ -257,6 +286,14 @@ export default function Home() {
                 <LoadingMessage>No movies found for this filter.</LoadingMessage>
               )}
             </MovieGrid>
+
+            {trendingMovies.length > 0 && (
+              <Pagination 
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
+            )}
 
             {recommendedMovies.length > 0 && (
               <>

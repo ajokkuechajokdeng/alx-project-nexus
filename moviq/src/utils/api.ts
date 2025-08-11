@@ -159,13 +159,13 @@ export const getMovieDetails = async (id: number): Promise<MovieDetails | null> 
 };
 
 // Search for movies
-export const searchMovies = async (query: string): Promise<Movie[]> => {
-  const cacheKey = `search-${query}`;
+export const searchMovies = async (query: string, page: number = 1): Promise<MoviesResponse> => {
+  const cacheKey = `search-${query}-page-${page}`;
 
   // Check cache first
-  const cachedData = apiCache.get<Movie[]>(cacheKey);
+  const cachedData = apiCache.get<MoviesResponse>(cacheKey);
   if (cachedData) {
-    console.log(`Using cached search results for "${query}"`);
+    console.log(`Using cached search results for "${query}" page ${page}`);
     return cachedData;
   }
 
@@ -174,17 +174,23 @@ export const searchMovies = async (query: string): Promise<Movie[]> => {
       api.get<MoviesResponse>('/search/movie', {
         params: {
           query,
+          page,
         },
       })
     );
 
     // Store in cache
-    apiCache.set(cacheKey, data.results);
+    apiCache.set(cacheKey, data);
 
-    return data.results;
+    return data;
   } catch (error) {
     console.error('Error searching movies:', error);
-    return [];
+    return {
+      page: page,
+      results: [],
+      total_pages: 0,
+      total_results: 0
+    };
   }
 };
 
