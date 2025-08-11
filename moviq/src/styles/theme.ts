@@ -4,13 +4,19 @@ export const theme = {
   colors: {
     primary: '#E50914',
     secondary: '#0071EB',
-    background: '#141414',
-    surface: '#1F1F1F',
+    accent: '#FFC107',
+    background: '#121212',
+    surface: '#1E1E1E',
+    surfaceLight: '#2A2A2A',
     text: '#FFFFFF',
     textSecondary: '#B3B3B3',
+    textTertiary: '#8C8C8C',
     border: '#333333',
     error: '#FF5252',
     success: '#4CAF50',
+    warning: '#FFC107',
+    info: '#2196F3',
+    overlay: 'rgba(0, 0, 0, 0.7)',
   },
   fonts: {
     body: 'var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
@@ -76,25 +82,44 @@ export const GlobalStyle = createGlobalStyle`
     font-family: ${({ theme }) => theme.fonts.body};
     background-color: ${({ theme }) => theme.colors.background};
     color: ${({ theme }) => theme.colors.text};
-    line-height: 1.5;
+    line-height: 1.6;
     font-size: 16px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overflow-x: hidden;
   }
 
   a {
     color: ${({ theme }) => theme.colors.secondary};
     text-decoration: none;
     transition: ${({ theme }) => theme.transitions.default};
+    position: relative;
 
     &:hover {
-      text-decoration: underline;
+      color: ${({ theme }) => theme.colors.primary};
+    }
+
+    &:focus {
+      outline: 2px solid ${({ theme }) => theme.colors.secondary};
+      outline-offset: 2px;
     }
   }
 
   button {
     cursor: pointer;
     font-family: ${({ theme }) => theme.fonts.body};
+    border: none;
+    background: none;
+    transition: ${({ theme }) => theme.transitions.default};
+
+    &:focus {
+      outline: 2px solid ${({ theme }) => theme.colors.secondary};
+      outline-offset: 2px;
+    }
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -102,10 +127,52 @@ export const GlobalStyle = createGlobalStyle`
     font-weight: 600;
     line-height: 1.2;
     margin-bottom: ${({ theme }) => theme.space.md};
+    letter-spacing: -0.02em;
+  }
+
+  h1 {
+    font-size: ${({ theme }) => theme.fontSizes['4xl']};
+    margin-bottom: ${({ theme }) => theme.space.lg};
+  }
+
+  h2 {
+    font-size: ${({ theme }) => theme.fontSizes['3xl']};
+    margin-bottom: ${({ theme }) => theme.space.md};
+  }
+
+  h3 {
+    font-size: ${({ theme }) => theme.fontSizes['2xl']};
+  }
+
+  p {
+    margin-bottom: ${({ theme }) => theme.space.md};
   }
 
   img {
     max-width: 100%;
     height: auto;
+    display: block;
+  }
+
+  input, textarea, select {
+    font-family: ${({ theme }) => theme.fonts.body};
+    font-size: ${({ theme }) => theme.fontSizes.md};
+    color: ${({ theme }) => theme.colors.text};
+    background-color: ${({ theme }) => theme.colors.surface};
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radii.md};
+    padding: ${({ theme }) => `${theme.space.sm} ${theme.space.md}`};
+    transition: ${({ theme }) => theme.transitions.default};
+
+    &:focus {
+      outline: none;
+      border-color: ${({ theme }) => theme.colors.secondary};
+      box-shadow: 0 0 0 2px ${({ theme }) => `${theme.colors.secondary}40`};
+    }
+  }
+
+  ::selection {
+    background-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.text};
   }
 `;
