@@ -10,7 +10,7 @@ const HeaderContainer = styled.header`
   padding: ${({ theme }) => `${theme.space.md} ${theme.space.xl}`};
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000; /* Increased z-index to ensure it's above other elements */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   transition: all 0.3s ease;
@@ -59,24 +59,30 @@ const Nav = styled.nav<{ isOpen?: boolean }>`
   margin: 0 ${({ theme }) => theme.space.xl};
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     order: 3;
-    width: 100%;
-    justify-content: center;
-    margin: ${({ theme }) => theme.space.sm} 0 0;
+    width: auto;
+    margin: ${({ theme }) => theme.space.sm} ${({ theme }) => theme.space.md};
     padding-top: ${({ theme }) => theme.space.sm};
     border-top: 1px solid ${({ theme }) => theme.colors.border};
     flex-direction: column;
     align-items: flex-start;
     gap: ${({ theme }) => theme.space.md};
-    max-height: ${({ isOpen }) => (isOpen ? '1000px' : '0')};
-    overflow: hidden;
+    max-height: ${({ isOpen }) => (isOpen ? '80vh' : '0')};
+    overflow-y: auto;
+    overflow-x: hidden;
     opacity: ${({ isOpen }) => (isOpen ? '1' : '0')};
     visibility: ${({ isOpen }) => (isOpen ? 'visible' : 'hidden')};
     padding: ${({ isOpen }) => (isOpen ? '1rem' : '0')};
     background-color: ${({ theme }) => theme.colors.surface};
     border-radius: ${({ theme }) => theme.radii.md};
-    box-shadow: ${({ theme }) => theme.shadows.md};
+    box-shadow: ${({ isOpen }) => (isOpen ? '0 8px 24px rgba(0, 0, 0, 0.3)' : 'none')};
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 200;
+    transform: ${({ isOpen }) => (isOpen ? 'translateY(0)' : 'translateY(-10px)')};
   }
 `;
 
@@ -104,8 +110,8 @@ const MobileMenuButton = styled.button<{ isOpen: boolean }>`
   display: none;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   border-radius: ${({ theme }) => theme.radii.md};
   background-color: ${({ isOpen, theme }) => 
     isOpen ? theme.colors.primary : `${theme.colors.surfaceLight}40`};
@@ -113,20 +119,49 @@ const MobileMenuButton = styled.button<{ isOpen: boolean }>`
   border: 1px solid ${({ isOpen, theme }) => 
     isOpen ? theme.colors.primary : theme.colors.border};
   cursor: pointer;
-  transition: ${({ theme }) => theme.transitions.default};
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  z-index: 101;
+  z-index: 1100; /* Increased z-index to be above the mobile menu */
+  box-shadow: ${({ isOpen }) => 
+    isOpen ? `0 4px 12px rgba(229, 9, 20, 0.3)` : 'none'};
+  overflow: hidden;
+
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
 
   &:hover {
     background-color: ${({ isOpen, theme }) => 
       isOpen ? theme.colors.primary : theme.colors.surfaceLight};
     color: ${({ theme }) => theme.colors.text};
     transform: scale(1.05);
+
+    &:before {
+      opacity: 1;
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+    transition: transform 0.1s ease;
   }
 
   @media (max-width: ${({ theme }) => theme.breakpoints.md}) {
     display: flex;
     margin-left: auto;
+  }
+
+  @media (max-width: ${({ theme }) => theme.breakpoints.sm}) {
+    width: 44px;
+    height: 44px;
   }
 `;
 
@@ -146,7 +181,7 @@ const FilterBadge = styled.span`
   top: -1px;
 `;
 
-const NavLink = styled.a<{ active?: boolean; hasFilters?: boolean }>`
+const NavLink = styled.a<{ active?: boolean; hasFilters?: boolean; onClick?: () => void }>`
   color: ${({ theme, active }) => active ? theme.colors.primary : theme.colors.text};
   font-weight: ${({ active }) => active ? '600' : '500'};
   transition: ${({ theme }) => theme.transitions.default};
@@ -345,6 +380,48 @@ const ChevronIcon = styled.span<{ isOpen: boolean }>`
   transform: ${({ isOpen }) => (isOpen ? 'rotate(180deg)' : 'rotate(0)')};
 `;
 
+const HamburgerIconContainer = styled.div<{ isOpen: boolean }>`
+  width: 24px;
+  height: 24px;
+  position: relative;
+  transform: rotate(0deg);
+  transition: transform 0.3s ease-in-out;
+  cursor: pointer;
+
+  span {
+    display: block;
+    position: absolute;
+    height: 3px;
+    width: 100%;
+    background: currentColor;
+    border-radius: 3px;
+    opacity: 1;
+    left: 0;
+    transform: rotate(0deg);
+    transition: all 0.25s ease-in-out;
+    transform-origin: center center;
+
+    &:nth-child(1) {
+      top: ${({ isOpen }) => (isOpen ? '10px' : '4px')};
+      width: ${({ isOpen }) => (isOpen ? '100%' : '100%')};
+      transform: ${({ isOpen }) => (isOpen ? 'rotate(45deg)' : 'rotate(0)')};
+    }
+
+    &:nth-child(2) {
+      top: 10px;
+      width: 100%;
+      opacity: ${({ isOpen }) => (isOpen ? '0' : '1')};
+      transform: ${({ isOpen }) => (isOpen ? 'translateX(20px)' : 'translateX(0)')};
+    }
+
+    &:nth-child(3) {
+      top: ${({ isOpen }) => (isOpen ? '10px' : '16px')};
+      width: ${({ isOpen }) => (isOpen ? '100%' : '100%')};
+      transform: ${({ isOpen }) => (isOpen ? 'rotate(-45deg)' : 'rotate(0)')};
+    }
+  }
+`;
+
 const SearchContainer = styled.div`
   position: relative;
   width: 300px;
@@ -407,6 +484,17 @@ const SearchButton = styled.button`
     background-color: ${({ theme }) => `${theme.colors.surfaceLight}40`};
   }
 `;
+
+// Hamburger icon component with animated bars
+const HamburgerIcon: React.FC<{ isOpen: boolean }> = ({ isOpen }) => {
+  return (
+    <HamburgerIconContainer isOpen={isOpen}>
+      <span></span>
+      <span></span>
+      <span></span>
+    </HamburgerIconContainer>
+  );
+};
 
 const Header: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -480,32 +568,57 @@ const Header: React.FC = () => {
   const handleGenreSelect = (genreSlug: string | null) => {
     navigateWithFilters({ genre: genreSlug });
     setGenresOpen(false);
+    setMobileMenuOpen(false); // Close mobile menu when a genre is selected
   };
 
   // Handle discover selection
   const handleDiscoverSelect = (discoverType: string) => {
     navigateWithFilters({ discover: discoverType });
     setDiscoverOpen(false);
+    setMobileMenuOpen(false); // Close mobile menu when a discover option is selected
   };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      setMobileMenuOpen(false); // Close mobile menu when search is performed
     }
   };
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
+      // Get the mobile menu button element
+      const mobileMenuButton = document.querySelector('[aria-label="Toggle menu"]');
+
+      // Check if the click was on the mobile menu button
+      const isClickOnMenuButton = mobileMenuButton && mobileMenuButton.contains(event.target as Node);
+
+      // Check if the click was on a link or button inside the mobile menu
+      const isClickOnNavLink = (event.target as Element)?.closest('a, button') !== null;
+
+      // Only close the mobile menu if the click was not on the menu button or the menu itself
+      if (mobileMenuRef.current && 
+          !mobileMenuRef.current.contains(event.target as Node) && 
+          !isClickOnMenuButton) {
+        setMobileMenuOpen(false);
+      }
+
+      // If the click was on a nav link, close the mobile menu
+      if (isClickOnNavLink && mobileMenuOpen) {
+        // Use setTimeout to ensure the navigation happens before closing the menu
+        setTimeout(() => setMobileMenuOpen(false), 100);
+      }
+
+      // Handle genre dropdown
       if (genresRef.current && !genresRef.current.contains(event.target as Node)) {
         setGenresOpen(false);
       }
+
+      // Handle discover dropdown
       if (discoverRef.current && !discoverRef.current.contains(event.target as Node)) {
         setDiscoverOpen(false);
-      }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
-        setMobileMenuOpen(false);
       }
     };
 
@@ -513,7 +626,7 @@ const Header: React.FC = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [mobileMenuOpen]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -534,21 +647,21 @@ const Header: React.FC = () => {
           aria-label="Toggle menu"
           aria-expanded={mobileMenuOpen}
           isOpen={mobileMenuOpen}
+          title={mobileMenuOpen ? "Close menu" : "Open menu"}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            {mobileMenuOpen ? (
-              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            ) : (
-              <path d="M4 6H20M4 12H20M4 18H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            )}
-          </svg>
+          <HamburgerIcon isOpen={mobileMenuOpen} />
         </MobileMenuButton>
 
         <div ref={mobileMenuRef}>
           <Nav isOpen={mobileMenuOpen}>
             <NavItem>
               <Link href="/" passHref>
-                <NavLink active={pathname === '/'}>Home</NavLink>
+                <NavLink 
+                  active={pathname === '/'} 
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Home
+                </NavLink>
               </Link>
             </NavItem>
 
@@ -607,7 +720,10 @@ const Header: React.FC = () => {
                         name="sort" 
                         value={option.value}
                         checked={activeSort === option.value}
-                        onChange={() => handleSortChange(option.value)}
+                        onChange={() => {
+                          handleSortChange(option.value);
+                          setMobileMenuOpen(false); // Close mobile menu when sort option is selected
+                        }}
                       />
                       {option.label}
                     </SortOption>
@@ -661,10 +777,13 @@ const Header: React.FC = () => {
                       name="time_period" 
                       value="all"
                       checked={!query.time_period || query.time_period === 'all'}
-                      onChange={() => navigateWithFilters({ 
-                        discover: discover as string || 'trending',
-                        genre: genre as string || null
-                      })}
+                      onChange={() => {
+                        navigateWithFilters({ 
+                          discover: discover as string || 'trending',
+                          genre: genre as string || null
+                        });
+                        setMobileMenuOpen(false); // Close mobile menu when filter option is selected
+                      }}
                     />
                     All Time
                   </FilterOption>
@@ -674,11 +793,14 @@ const Header: React.FC = () => {
                       name="time_period" 
                       value="today"
                       checked={query.time_period === 'today'}
-                      onChange={() => navigateWithFilters({ 
-                        discover: discover as string || 'trending',
-                        genre: genre as string || null,
-                        sort: sort as string || activeSort
-                      }, { time_period: 'today' })}
+                      onChange={() => {
+                        navigateWithFilters({ 
+                          discover: discover as string || 'trending',
+                          genre: genre as string || null,
+                          sort: sort as string || activeSort
+                        }, { time_period: 'today' });
+                        setMobileMenuOpen(false); // Close mobile menu when filter option is selected
+                      }}
                     />
                     Today
                   </FilterOption>
@@ -688,11 +810,14 @@ const Header: React.FC = () => {
                       name="time_period" 
                       value="this_week"
                       checked={query.time_period === 'this_week'}
-                      onChange={() => navigateWithFilters({ 
-                        discover: discover as string || 'trending',
-                        genre: genre as string || null,
-                        sort: sort as string || activeSort
-                      }, { time_period: 'this_week' })}
+                      onChange={() => {
+                        navigateWithFilters({ 
+                          discover: discover as string || 'trending',
+                          genre: genre as string || null,
+                          sort: sort as string || activeSort
+                        }, { time_period: 'this_week' });
+                        setMobileMenuOpen(false); // Close mobile menu when filter option is selected
+                      }}
                     />
                     This Week
                   </FilterOption>
@@ -702,11 +827,14 @@ const Header: React.FC = () => {
                       name="time_period" 
                       value="this_month"
                       checked={query.time_period === 'this_month'}
-                      onChange={() => navigateWithFilters({ 
-                        discover: discover as string || 'trending',
-                        genre: genre as string || null,
-                        sort: sort as string || activeSort
-                      }, { time_period: 'this_month' })}
+                      onChange={() => {
+                        navigateWithFilters({ 
+                          discover: discover as string || 'trending',
+                          genre: genre as string || null,
+                          sort: sort as string || activeSort
+                        }, { time_period: 'this_month' });
+                        setMobileMenuOpen(false); // Close mobile menu when filter option is selected
+                      }}
                     />
                     This Month
                   </FilterOption>
@@ -716,7 +844,10 @@ const Header: React.FC = () => {
 
             <NavItem>
               <Link href="/favorites" passHref>
-                <NavLink active={pathname === '/favorites'}>
+                <NavLink 
+                  active={pathname === '/favorites'}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
