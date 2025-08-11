@@ -192,10 +192,12 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onFavoriteToggle, isFavori
             />
           ) : (
             <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222', color: '#fff', fontSize: '1rem', position: 'absolute', top: 0, left: 0, flexDirection: 'column'}}>
-              <img
+              <Image
                 src={FALLBACK_POSTER}
                 alt="No poster available"
-                style={{ width: '48px', height: '48px', marginBottom: '0.5rem', opacity: 0.7 }}
+                width={48}
+                height={48}
+                style={{ marginBottom: '0.5rem', opacity: 0.7 }}
               />
               <span style={{fontWeight: 500}}>No Image</span>
               <span style={{fontSize: '0.8rem', color: '#aaa'}}>TMDB data missing</span>

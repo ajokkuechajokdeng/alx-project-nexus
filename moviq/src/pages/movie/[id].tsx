@@ -6,7 +6,7 @@ import { Movie, MovieDetails } from '@/types/movie';
 import { getMovieDetails, getMoviePosterUrl, getMovieBackdropUrl, getRecommendedMovies } from '@/utils/api';
 import { useFavorites } from '@/hooks/useFavorites';
 import MovieCard from '@/components/MovieCard';
-import { MovieCardSkeleton, MovieDetailsSkeleton } from '@/components/SkeletonLoader';
+import { MovieDetailsSkeleton } from '@/components/SkeletonLoader';
 import PageTransition from '@/components/PageTransition';
 import SEO from '@/components/SEO';
 
@@ -184,11 +184,6 @@ const MovieGrid = styled.div`
   }
 `;
 
-const LoadingMessage = styled.div`
-  text-align: center;
-  padding: ${({ theme }) => theme.space.xl};
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
 
 const ErrorMessage = styled.div`
   text-align: center;

@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import styled from "styled-components";
 import MovieCard from "@/components/MovieCard";
 import { MovieCardSkeleton } from "@/components/SkeletonLoader";
 import PageTransition from "@/components/PageTransition";
 import SEO from "@/components/SEO";
 import { Movie } from "@/types/movie";
-import { getTrendingMovies, getRecommendedMovies } from "@/utils/api";
+import { getRecommendedMovies } from "@/utils/api";
 import { useFavorites } from "@/hooks/useFavorites";
+import { GENRE_MAPPINGS, GENRE_NAMES, DISCOVERY_TYPES, SORT_OPTIONS } from "@/constants/genres";
 
 const PageTitle = styled.h1`
   font-size: ${({ theme }) => theme.fontSizes["4xl"]};
@@ -45,26 +47,150 @@ const ErrorMessage = styled.div`
 `;
 
 export default function Home() {
+  const router = useRouter();
+  const { genre, discover, sort, time_period } = router.query;
+
   const [trendingMovies, setTrendingMovies] = useState<Movie[]>([]);
   const [recommendedMovies, setRecommendedMovies] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { addFavorite, removeFavorite, isFavorite } = useFavorites();
 
+  // Generate page title based on active filters
+  const getPageTitle = () => {
+    let title = "Welcome to MovIQ";
+
+    // Add genre if present
+    if (genre && genre !== 'all') {
+      const genreName = GENRE_NAMES[genre as string] || 'Unknown Genre';
+      title = `${genreName} Movies`;
+    }
+
+    // Add discover type if present
+    if (discover) {
+      const discoverName = DISCOVERY_TYPES[discover as string] || '';
+      if (discoverName) {
+        title = genre ? `${title} - ${discoverName}` : `${discoverName} Movies`;
+      }
+    }
+
+    // Add time period if present
+    if (time_period) {
+      let timePeriodText = '';
+      if (time_period === 'today') {
+        timePeriodText = 'Today';
+      } else if (time_period === 'this_week') {
+        timePeriodText = 'This Week';
+      } else if (time_period === 'this_month') {
+        timePeriodText = 'This Month';
+      }
+
+      if (timePeriodText) {
+        title = `${title} - ${timePeriodText}`;
+      }
+    }
+
+    // Add sort if present
+    if (sort) {
+      const sortOption = SORT_OPTIONS.find(option => option.value === sort);
+      if (sortOption) {
+        title = `${title} (${sortOption.label})`;
+      }
+    }
+
+    return title;
+  };
+
+  // Fetch movies based on discover type, sort, and time period
   useEffect(() => {
     const fetchMovies = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Fetch trending movies
-        const trending = await getTrendingMovies();
-        setTrendingMovies(trending);
+        // Build API URL with parameters
+        let apiUrl = '';
+        const sortParam = sort ? `&sort_by=${sort}` : '';
+        let timeWindow = '';
 
-        // Fetch recommended movies based on the first trending movie
-        if (trending.length > 0) {
-          const recommended = await getRecommendedMovies(trending[0].id);
+        // Set time window based on time_period
+        if (time_period === 'today') {
+          timeWindow = 'day';
+        } else if (time_period === 'this_week') {
+          timeWindow = 'week';
+        } else {
+          timeWindow = 'week'; // Default to week
+        }
+
+        // Determine which API endpoint to use based on discover type
+        if (discover === "top-rated") {
+          apiUrl = `https://api.themoviedb.org/3/movie/top_rated?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1${sortParam}`;
+        } else if (discover === "upcoming") {
+          apiUrl = `https://api.themoviedb.org/3/movie/upcoming?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1${sortParam}`;
+        } else if (discover === "now-playing") {
+          apiUrl = `https://api.themoviedb.org/3/movie/now_playing?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1${sortParam}`;
+        } else {
+          // Default to trending
+          apiUrl = `https://api.themoviedb.org/3/trending/movie/${timeWindow}?api_key=${process.env.NEXT_PUBLIC_TMDB_API_KEY}&language=en-US&page=1`;
+        }
+
+        // Fetch movies
+        const res = await fetch(apiUrl);
+        const data = await res.json();
+        let movies = data.results || [];
+
+        // Apply sorting if not already sorted by API
+        if (sort && !apiUrl.includes('sort_by')) {
+          const [sortField, sortDirection] = (sort as string).split('.');
+          movies = [...movies].sort((a, b) => {
+            if (sortField === 'popularity') {
+              return sortDirection === 'desc' 
+                ? b.popularity - a.popularity 
+                : a.popularity - b.popularity;
+            } else if (sortField === 'vote_average') {
+              return sortDirection === 'desc' 
+                ? b.vote_average - a.vote_average 
+                : a.vote_average - b.vote_average;
+            } else if (sortField === 'release_date') {
+              return sortDirection === 'desc' 
+                ? new Date(b.release_date).getTime() - new Date(a.release_date).getTime()
+                : new Date(a.release_date).getTime() - new Date(b.release_date).getTime();
+            } else if (sortField === 'original_title') {
+              return sortDirection === 'desc' 
+                ? b.title.localeCompare(a.title)
+                : a.title.localeCompare(b.title);
+            }
+            return 0;
+          });
+        }
+
+        // Filter by genre if needed
+        let filtered = movies;
+        if (genre && genre !== 'all') {
+          // Check if genre is a string ID or a slug
+          let genreId: number;
+          if (/^\d+$/.test(genre as string)) {
+            genreId = Number(genre);
+          } else {
+            // Convert genre slug to ID using our mappings
+            genreId = GENRE_MAPPINGS[genre as string] || 0;
+          }
+
+          if (genreId) {
+            filtered = movies.filter((movie: Movie) =>
+              movie.genre_ids.includes(genreId)
+            );
+          }
+        }
+
+        setTrendingMovies(filtered);
+
+        // Recommended movies (based on first trending movie)
+        if (filtered.length > 0) {
+          const recommended = await getRecommendedMovies(filtered[0].id);
           setRecommendedMovies(recommended);
+        } else {
+          setRecommendedMovies([]);
         }
       } catch (err) {
         console.error("Error fetching movies:", err);
@@ -75,7 +201,7 @@ export default function Home() {
     };
 
     fetchMovies();
-  }, []);
+  }, [genre, discover, sort, time_period]);
 
   const handleFavoriteToggle = (movie: Movie) => {
     if (isFavorite(movie.id)) {
@@ -88,13 +214,13 @@ export default function Home() {
   return (
     <>
       <SEO 
-        title="Movie Recommendations"
-        description="Discover trending and recommended movies from around the world. Find your next favorite film with MovIQ."
-        url="/"
+        title={getPageTitle()}
+        description={`${getPageTitle()} - Find your next favorite film with MovIQ. Browse our collection of movies filtered by your preferences.`}
+        url={`/?${new URLSearchParams(router.query as Record<string, string>).toString()}`}
       />
 
       <PageTransition>
-        <PageTitle>Welcome to MovIQ</PageTitle>
+        <PageTitle>{getPageTitle()}</PageTitle>
 
         {isLoading ? (
           <>
@@ -118,14 +244,18 @@ export default function Home() {
           <>
             <SectionTitle>Trending Movies</SectionTitle>
             <MovieGrid>
-              {trendingMovies.map((movie) => (
-                <MovieCard
-                  key={movie.id}
-                  movie={movie}
-                  onFavoriteToggle={handleFavoriteToggle}
-                  isFavorite={isFavorite(movie.id)}
-                />
-              ))}
+              {trendingMovies.length > 0 ? (
+                trendingMovies.map((movie) => (
+                  <MovieCard
+                    key={movie.id}
+                    movie={movie}
+                    onFavoriteToggle={handleFavoriteToggle}
+                    isFavorite={isFavorite(movie.id)}
+                  />
+                ))
+              ) : (
+                <LoadingMessage>No movies found for this filter.</LoadingMessage>
+              )}
             </MovieGrid>
 
             {recommendedMovies.length > 0 && (
