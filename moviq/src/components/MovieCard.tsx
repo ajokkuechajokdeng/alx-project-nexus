@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { Movie } from '@/types/movie';
 import { getMoviePosterUrl } from '@/utils/api';
 
+const FALLBACK_POSTER = '/fallback-poster.png';
+
 interface MovieCardProps {
   movie: Movie;
   onFavoriteToggle?: (movie: Movie) => void;
@@ -155,18 +157,36 @@ const MovieCard: React.FC<MovieCardProps> = ({ movie, onFavoriteToggle, isFavori
     <Link href={`/movie/${movie.id}`} passHref>
       <Card>
         <PosterContainer>
-          <Image
-            src={getMoviePosterUrl(movie.poster_path)}
-            alt={movie.title}
-            fill
-            sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-            style={{ objectFit: 'cover' }}
-          />
+          {movie.poster_path ? (
+            <Image
+              src={getMoviePosterUrl(movie.poster_path)}
+              alt={movie.title + ' poster'}
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+              style={{ objectFit: 'cover', background: '#222' }}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = FALLBACK_POSTER;
+              }}
+            />
+          ) : (
+            <div style={{width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#222', color: '#fff', fontSize: '1rem', position: 'absolute', top: 0, left: 0, flexDirection: 'column'}}>
+              <img
+                src={FALLBACK_POSTER}
+                alt="No poster available"
+                style={{ width: '48px', height: '48px', marginBottom: '0.5rem', opacity: 0.7 }}
+              />
+              <span style={{fontWeight: 500}}>No Image</span>
+              <span style={{fontSize: '0.8rem', color: '#aaa'}}>TMDB data missing</span>
+            </div>
+          )}
           {onFavoriteToggle && (
             <FavoriteButton 
               onClick={handleFavoriteClick}
               isFavorite={isFavorite}
               aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+              title={isFavorite ? "Remove from favorites" : "Add to favorites"}
             >
               {isFavorite ? '❤️' : '🤍'}
             </FavoriteButton>
